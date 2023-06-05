@@ -17,14 +17,12 @@ import '_functions_io.dart' if (dart.library.html) '_functions_web.dart';
 /// Markdown link tag in the document.
 ///
 /// Used by [MarkdownWidget.onTapLink].
-typedef MarkdownTapLinkCallback = void Function(
-    String text, String? href, String title);
+typedef MarkdownTapLinkCallback = void Function(String text, String? href, String title);
 
 /// Signature for custom image widget.
 ///
 /// Used by [MarkdownWidget.imageBuilder]
-typedef MarkdownImageBuilder = Widget Function(
-    Uri uri, String? title, String? alt);
+typedef MarkdownImageBuilder = Widget Function(Uri uri, String? title, String? alt);
 
 /// Signature for custom checkbox widget.
 ///
@@ -77,8 +75,7 @@ abstract class MarkdownElementBuilder {
   /// to [preferredStyle].
   ///
   /// If you needn't build a widget, return null.
-  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) =>
-      null;
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) => null;
 }
 
 /// Enum to specify which theme being used when creating [MarkdownStyleSheet]
@@ -165,9 +162,9 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.builders = const <String, MarkdownElementBuilder>{},
     this.paddingBuilders = const <String, MarkdownPaddingBuilder>{},
     this.fitContent = false,
-    this.listItemCrossAxisAlignment =
-        MarkdownListItemCrossAxisAlignment.baseline,
+    this.listItemCrossAxisAlignment = MarkdownListItemCrossAxisAlignment.baseline,
     this.softLineBreak = false,
+    this.richTextBuilder,
   });
 
   /// The Markdown to display.
@@ -265,6 +262,11 @@ abstract class MarkdownWidget extends StatefulWidget {
   /// specification on soft line breaks when lines of text are joined.
   final bool softLineBreak;
 
+  /// Called when building rich text
+  ///
+  /// It is optional, default builder builds [RichText] or [SelectableText.rich]
+  final RichTextBuilder? richTextBuilder;
+
   /// Subclasses should override this function to display the given children,
   /// which are the parsed representation of [data].
   @protected
@@ -274,8 +276,7 @@ abstract class MarkdownWidget extends StatefulWidget {
   State<MarkdownWidget> createState() => _MarkdownWidgetState();
 }
 
-class _MarkdownWidgetState extends State<MarkdownWidget>
-    implements MarkdownBuilderDelegate {
+class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuilderDelegate {
   List<Widget>? _children;
   final List<GestureRecognizer> _recognizers = <GestureRecognizer>[];
 
@@ -288,8 +289,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
   @override
   void didUpdateWidget(MarkdownWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.data != oldWidget.data ||
-        widget.styleSheet != oldWidget.styleSheet) {
+    if (widget.data != oldWidget.data || widget.styleSheet != oldWidget.styleSheet) {
       _parseMarkdown();
     }
   }
@@ -301,10 +301,8 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
   }
 
   void _parseMarkdown() {
-    final MarkdownStyleSheet fallbackStyleSheet =
-        kFallbackStyle(context, widget.styleSheetTheme);
-    final MarkdownStyleSheet styleSheet =
-        fallbackStyleSheet.merge(widget.styleSheet);
+    final MarkdownStyleSheet fallbackStyleSheet = kFallbackStyle(context, widget.styleSheetTheme);
+    final MarkdownStyleSheet styleSheet = fallbackStyleSheet.merge(widget.styleSheet);
 
     _disposeRecognizers();
 
@@ -335,6 +333,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
       listItemCrossAxisAlignment: widget.listItemCrossAxisAlignment,
       onTapText: widget.onTapText,
       softLineBreak: widget.softLineBreak,
+      richTextBuilder: widget.richTextBuilder,
     );
 
     _children = builder.build(astNodes);
@@ -344,8 +343,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
     if (_recognizers.isEmpty) {
       return;
     }
-    final List<GestureRecognizer> localRecognizers =
-        List<GestureRecognizer>.from(_recognizers);
+    final List<GestureRecognizer> localRecognizers = List<GestureRecognizer>.from(_recognizers);
     _recognizers.clear();
     for (final GestureRecognizer recognizer in localRecognizers) {
       recognizer.dispose();
@@ -407,6 +405,7 @@ class MarkdownBody extends MarkdownWidget {
     super.imageBuilder,
     super.checkboxBuilder,
     super.bulletBuilder,
+    super.richTextBuilder,
     super.builders,
     super.paddingBuilders,
     super.listItemCrossAxisAlignment,
@@ -427,8 +426,7 @@ class MarkdownBody extends MarkdownWidget {
     }
     return Column(
       mainAxisSize: shrinkWrap ? MainAxisSize.min : MainAxisSize.max,
-      crossAxisAlignment:
-          fitContent ? CrossAxisAlignment.start : CrossAxisAlignment.stretch,
+      crossAxisAlignment: fitContent ? CrossAxisAlignment.start : CrossAxisAlignment.stretch,
       children: children,
     );
   }
@@ -508,12 +506,10 @@ class Markdown extends MarkdownWidget {
 /// Parse [task list items](https://github.github.com/gfm/#task-list-items-extension-).
 ///
 /// This class is no longer used as Markdown now supports checkbox syntax natively.
-@Deprecated(
-    'Use [OrderedListWithCheckBoxSyntax] or [UnorderedListWithCheckBoxSyntax]')
+@Deprecated('Use [OrderedListWithCheckBoxSyntax] or [UnorderedListWithCheckBoxSyntax]')
 class TaskListSyntax extends md.InlineSyntax {
   /// Creates a new instance.
-  @Deprecated(
-      'Use [OrderedListWithCheckBoxSyntax] or [UnorderedListWithCheckBoxSyntax]')
+  @Deprecated('Use [OrderedListWithCheckBoxSyntax] or [UnorderedListWithCheckBoxSyntax]')
   TaskListSyntax() : super(_pattern);
 
   static const String _pattern = r'^ *\[([ xX])\] +';
